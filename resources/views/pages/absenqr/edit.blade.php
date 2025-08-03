@@ -12,9 +12,9 @@
         <div class="section-body">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('absenqr.update', $absenqr->id) }}" method="POST">
+                    <form action="{{ route('qr.update', $absenqr->id) }}" method="POST">
                         @csrf
-                        @method('PUT')
+                        @method('PATCH')
 
                         <div class="form-group">
                             <label for="jadwal_id">Mata Pelajaran</label>
@@ -38,7 +38,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary">Update</button>
-                        <a href="{{ route('absenqr.index') }}" class="btn btn-warning">Batal</a>
+                        <a href="javascript:history.back()" class="btn btn-warning">Batal</a>
                     </form>
                 </div>
             </div>

@@ -12,7 +12,7 @@
             <div class="section-body">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route('absenqr.store') }}" method="POST">
+                        <form action="{{ route('qr.store') }}" method="POST">
                             @csrf
 
                             <div class="form-group">

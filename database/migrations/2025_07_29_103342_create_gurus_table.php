@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('gurus', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->integer('nip');
+            $table->string('nip');
             $table->string('jenis_kelamin');
             $table->string('no_telepon')->nullable();
             $table->timestamps();

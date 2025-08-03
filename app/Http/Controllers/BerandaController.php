@@ -17,34 +17,51 @@ class BerandaController extends Controller
     {
         $type_menu = 'beranda';
 
+        // Statistik
         $jumlah_user = User::count();
         $jumlah_guru = Guru::count();
         $jumlah_siswa = Siswa::count();
         $jumlah_mapel = Mapel::count();
 
-        $tanggal = $request->input('tanggal') ?? now()->format('Y-m-d');
+        // Ambil semua hari yang ada di jadwal
+        $daftar_hari = Jadwal::select('hari')->distinct()->pluck('hari');
 
-        // Selalu tentukan hari dari tanggal
-        $hari = Carbon::parse($tanggal)->locale('id')->translatedFormat('l');
+        $user = Auth::user();
+        $role = $user->role;
 
-        // Kalau user pilih hari manual, pakai itu
-        if ($request->filled('hari')) {
-            $hari = $request->hari;
+        // Filter hari (dari dropdown)
+        $filterHari = $request->input('hari');
+
+        $jadwalQuery = Jadwal::query();
+
+        if ($role === 'Guru') {
+            $guru_id = optional($user->guru)->id;
+            if ($guru_id) {
+                $jadwalQuery->where('guru_id', $guru_id);
+            } else {
+                $jadwalQuery = collect(); // Tidak ada jadwal
+            }
+        } elseif ($role === 'Siswa') {
+            $kelas_id = optional($user->siswa)->kelas_id;
+            if ($kelas_id) {
+                $jadwalQuery->where('kelas_id', $kelas_id);
+            } else {
+                $jadwalQuery = collect(); // Tidak ada jadwal
+            }
         }
 
-        $jadwal = Jadwal::where('hari', $hari);
+        // Jika user bukan siswa/guru atau sudah ada query builder
+        if ($jadwalQuery instanceof \Illuminate\Database\Eloquent\Builder) {
+            if ($filterHari) {
+                $jadwalQuery->where('hari', $filterHari);
+            }
 
-        if (Auth::user()->role == 'Guru') {
-            $jadwal->where('guru_id', Auth::user()->guru->id);
-        } elseif (Auth::user()->role == 'Siswa') {
-            $jadwal->where('kelas_id', Auth::user()->siswa->kelas_id);
+            $jadwal = $jadwalQuery->with(['mapel', 'kelas', 'guru'])
+                ->orderBy('jam_mulai')
+                ->get();
+        } else {
+            $jadwal = collect(); // Kosongkan
         }
-
-        $jadwal = $jadwal->with(['mapel', 'kelas', 'guru'])
-            ->orderBy('jam_mulai')
-            ->get();
-
-        $tanggal_formatted = Carbon::parse($tanggal)->locale('id')->translatedFormat('l, d F Y');
 
         return view('pages.beranda.index', compact(
             'type_menu',
@@ -53,9 +70,9 @@ class BerandaController extends Controller
             'jumlah_siswa',
             'jumlah_mapel',
             'jadwal',
-            'tanggal',
-            'hari',
-            'tanggal_formatted'
+            'daftar_hari',
+            'filterHari'
         ));
     }
+
 }

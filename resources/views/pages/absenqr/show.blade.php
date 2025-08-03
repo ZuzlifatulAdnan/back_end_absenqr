@@ -14,11 +14,8 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>QR</h1>
-                <div class="section-header-breadcrumb">
-                    <div class="breadcrumb-item active"><a href="#">Absen QR</a></div>
-                    <div class="breadcrumb-item">QR</div>
-                </div>
+                <h1>QR | {{ optional($absenqr->first()->jadwal->mapel)->nama ?? '-' }} |
+                    {{ optional($absenqr->first()->jadwal->kelas)->nama ?? '-' }}</h1>
             </div>
             <div class="section-body">
                 <div class="row">
@@ -40,7 +37,7 @@
                                             {!! QrCode::size(200)->generate($absenqr->token_qr) !!}
                                         </div>
                                         <p class="text-center"><strong>Kode:</strong> {{ $absenqr->token_qr }}</p>
-                                        <a href="{{ route('absenqr.index') }}" class="btn btn-warning">Kembali</a>
+                                        <a href="javascript:history.back()" class="btn btn-warning">Kembali</a>
                                     </div>
                                 </div>
                             </div>

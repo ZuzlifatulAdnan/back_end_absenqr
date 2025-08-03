@@ -17,7 +17,7 @@
             <div class="section-body">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <form method="GET" action="{{ route('absenqr.index') }}" class="form-inline">
+                        <form method="GET" action="{{ route('qr.index') }}" class="form-inline">
                             <div class="input-group">
                                 <input type="text" name="nama" class="form-control" placeholder="Cari nama guru"
                                     value="{{ request('nama') }}">
@@ -29,7 +29,7 @@
                             </div>
                         </form>
 
-                        <a href="{{ route('absenqr.create') }}" class="btn btn-primary">
+                        <a href="{{ route('qr.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Tambah Absen QR
                         </a>
                     </div>
@@ -56,17 +56,17 @@
                                         <td>{{ $item->expired_at }}</td>
                                         <td>
                                             <div class="d-flex justify-content-center">
-                                                <a href="{{ route('absenqr.edit', $item->id) }}"
+                                                <a href="{{ route('qr.edit', $item->id) }}"
                                                     class="btn btn-sm btn-icon btn-primary m-1" data-toggle="tooltip"
                                                     title="Edit Guru">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <a href='{{ route('absenqr.show', $item->id) }}'
+                                                <a href='{{ route('qr.show', $item->id) }}'
                                                     class="btn btn-sm btn-icon btn-info m-1" data-toggle="tooltip"
                                                     title="Lihat Detail">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <form action="{{ route('absenqr.destroy', $item) }}" method="POST">
+                                                <form action="{{ route('qr.destroy', $item) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button class="btn btn-sm btn-icon m-1 btn-danger confirm-delete"

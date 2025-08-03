@@ -28,8 +28,7 @@
                                     <select name="kelas_id" class="form-control">
                                         <option value="">-- Semua Kelas --</option>
                                         @foreach ($kelasList as $kelas)
-                                            <option value="{{ $kelas->id }}"
-                                                {{ $selectedKelas == $kelas->id ? 'selected' : '' }}>
+                                            <option value="{{ $kelas->id }}" {{ $selectedKelas == $kelas->id ? 'selected' : '' }}>
                                                 {{ $kelas->nama }}
                                             </option>
                                         @endforeach
@@ -49,7 +48,10 @@
                             </div>
 
                             <div class="input-group-append">
-                                <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Filter</button>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i> Filter
+                                </button>
+                                <a href="{{ route('absen.index') }}" class="btn btn-warning ml-2">Reset</a>
                             </div>
                         </form>
                     </div>
@@ -59,8 +61,7 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
-                                    @if (Auth::user()->role == 'guru')
-                                    @else
+                                    @if (Auth::user()->role != 'guru')
                                         <th>Nama Guru</th>
                                     @endif
                                     <th>Mata Pelajaran</th>
@@ -74,43 +75,51 @@
                                 @forelse ($jadwals as $index => $item)
                                     <tr>
                                         <td>{{ $jadwals->firstItem() + $index }}</td>
-                                        @if (Auth::user()->role == 'guru')
-                                        @else
-                                            <td>{{ $item->guru->user->name }}</td>
+
+                                        @if (Auth::user()->role != 'guru')
+                                            <td>{{ $item->guru->user->name ?? '-' }}</td>
                                         @endif
 
-                                        <td>{{ $item->mapel->nama }}</td>
-                                        <td>{{ $item->kelas->nama }}</td>
+                                        <td>{{ $item->mapel->nama ?? '-' }}</td>
+                                        <td>{{ $item->kelas->nama ?? '-' }}</td>
                                         <td>{{ $item->hari }}</td>
                                         <td>{{ $item->jam_mulai }} - {{ $item->jam_selesai }}</td>
                                         <td class="text-center">
+                                            @if (Auth::user()->role == 'Admin' || Auth::user()->role == 'Guru')
+                                                <a href="{{ route('absen.add', $item) }}"
+                                                    class="btn btn-sm btn-icon btn-success m-1" title="Add Absen Manual">
+                                                    <i class="fas fa-plus"></i>
+                                                </a>
+                                            @endif
+
                                             @if (Auth::user()->role == 'Admin')
-                                                <a href="{{ route('absen.create', $item) }}"
-                                                    class="btn btn-sm btn-icon btn-success m-1"><i class="fas fa-plus"></i>
+                                                <a href="{{ route('qr.view', $item->id) }}"
+                                                    class="btn btn-sm btn-icon btn-success m-1" title="Generate QR">
+                                                    <i class="fas fa-qrcode"></i>
                                                 </a>
+                                            @endif
+
+                                            @if (Auth::user()->role == 'Admin' || Auth::user()->role == 'Guru')
                                                 <a href="{{ route('absen.show', $item->id) }}"
-                                                    class="btn btn-sm btn-icon btn-info m-1">
-                                                    <i class="fas fa-list"></i>
-                                                </a>
-                                                </a>
-                                            @elseif(Auth::user()->role == 'Guru')
-                                                <a href="{{ route('absen.create', $item) }}"
-                                                    class="btn btn-sm btn-icon btn-success m-1"><i class="fas fa-plus"></i>
-                                                </a>
-                                                <a href="{{ route('absen.show', $item->id) }}"
-                                                    class="btn btn-sm btn-icon btn-info m-1">
+                                                    class="btn btn-sm btn-icon btn-info m-1" title="Lihat Absen">
                                                     <i class="fas fa-list"></i>
                                                 </a>
                                             @endif
 
+                                            <a href="{{ route('absen.scan', $item) }}"
+                                                class="btn btn-sm btn-icon btn-warning m-1" title="Scan QR">
+                                                <i class="fas fa-camera"></i>
+                                            </a>
+
                                             <a href="{{ route('absen.rekap', $item) }}"
-                                                class="btn btn-sm btn-icon btn-primary m-1"><i class="fas fa-print"></i>
+                                                class="btn btn-sm btn-icon btn-primary m-1" title="Rekap Absen">
+                                                <i class="fas fa-print"></i>
                                             </a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center">Tidak ada data Jadwal Absensi.</td>
+                                        <td colspan="7" class="text-center">Tidak ada data Jadwal Absensi.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -119,11 +128,10 @@
 
                     <div class="card-footer d-flex justify-content-between">
                         <div>
-                            Menampilkan {{ $jadwals->firstItem() }} - {{ $jadwals->lastItem() }} dari
-                            {{ $jadwals->total() }} data
+                            Menampilkan {{ $jadwals->firstItem() }} - {{ $jadwals->lastItem() }} dari {{ $jadwals->total() }} data
                         </div>
                         <div>
-                            {{ $jadwals->withQueryString()->links() }}
+                            {{ $jadwals->withQueryString()->links('pagination::bootstrap-4') }}
                         </div>
                     </div>
                 </div>

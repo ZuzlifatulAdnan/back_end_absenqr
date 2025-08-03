@@ -118,10 +118,10 @@
                         <div class="jadwal-card">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5>{{ strtoupper($item->mapel->nama_mapel) }}</h5>
+                                    <h5>{{ strtoupper($item->mapel->nama) }}</h5>
                                     <p><i class="fas fa-clock"></i> {{ $item->jam_mulai }} - {{ $item->jam_selesai }} WIB
                                     </p>
-                                    <p><i class="fas fa-users"></i> Kelas {{ $item->kelas->nama_kelas }}</p>
+                                    <p><i class="fas fa-users"></i> Kelas {{ $item->kelas->nama }}</p>
                                 </div>
                                 <div class="text-right">
                                     <p>Pertemuan ke 1</p>

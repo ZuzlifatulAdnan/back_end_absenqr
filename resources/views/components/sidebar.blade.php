@@ -2,15 +2,16 @@
     <aside id="sidebar-wrapper">
         <div class="sidebar-brand">
             <a href="{{ route('beranda.index') }}">
-                <img src="{{ asset('img/logo/logo_nama.png') }}" alt="Logo" style="width: 180px; height: auto;">
+                <img src="{{ asset('img/logo/logo_nama.png') }}" alt="Logo" style="width: 200px; height: auto;">
             </a>
         </div>
+        <br>
         <div class="sidebar-brand sidebar-brand-sm">
             <a href="{{ route('beranda.index') }}">
-                <img src="{{ asset('img/logo/logo.png') }}" alt="Logo" style="width: 40px; height: auto;">
+                <img src="{{ asset('img/logo/logo.png') }}" alt="Logo" style="width: 50px; height: auto;">
             </a>
         </div>
-
+        <br>
         <ul class="sidebar-menu">
             <li class="menu-header">Dashboard</li>
             <li class="{{ $type_menu === 'beranda' ? 'active' : '' }}">
@@ -28,8 +29,8 @@
                     <li class="{{ Request::is('absen*') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('absen.index') }}">Absen</a>
                     </li>
-                    <li class="{{ Request::is('absenqr*') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('absenqr.index') }}">Absen QR</a>
+                    <li class="{{ Request::is('absen/qr*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('qr.index') }}">Absen QR</a>
                     </li>
                 </ul>
             </li>

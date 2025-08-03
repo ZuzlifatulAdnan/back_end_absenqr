@@ -13,12 +13,23 @@ use Illuminate\Http\Request;
 
 class AbsenQrController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $type_menu = 'absen';
-        $absenqr = Absen_Qr::with('jadwal.mapel', 'jadwal.kelas')->latest()->paginate(10);
+
+        $query = Absen_Qr::with('jadwal.mapel', 'jadwal.kelas');
+
+        if ($request->filled('nama')) {
+            $query->whereHas('jadwal.guru', function ($q) use ($request) {
+                $q->where('nama', 'like', '%' . $request->nama . '%');
+            });
+        }
+
+        $absenqr = $query->latest()->paginate(10);
+
         return view('pages.absenqr.index', compact('absenqr', 'type_menu'));
     }
+
 
     public function create()
     {
@@ -56,7 +67,7 @@ class AbsenQrController extends Controller
 
         return redirect()->route('absenqr.index')->with('success', 'QR Token Berhasil di Buat untuk Tanggal Absen ' . $absenqr->tanggal_absen);
     }
-     public function edit($id)
+    public function edit($id)
     {
         $type_menu = 'absen';
         $absenqr = Absen_Qr::with('jadwal.mapel', 'jadwal.kelas')->findOrFail($id);
@@ -68,7 +79,7 @@ class AbsenQrController extends Controller
     public function update(Request $request, Absen_Qr $absen_qr)
     {
         $request->validate([
-           'jadwal_id' => 'required|exists:jadwals,id',
+            'jadwal_id' => 'required|exists:jadwals,id',
             'tanggal_absen' => 'required|date',
             'expired_at' => 'required|date|after:tanggal_absen',
         ]);
@@ -79,9 +90,9 @@ class AbsenQrController extends Controller
             'expired_at' => $request->expired_at,
         ]);
 
-        return redirect()->route('absenqr.index')->with('success', 'QR Token Berhasil di Perbarui untuk Tanggal Absen ' . $absen_qr->tanggal_absen);
+        return redirect()->route('qr.index')->with('success', 'QR Token Berhasil di Perbarui untuk Tanggal Absen ' . $absen_qr->tanggal_absen);
     }
-     private function generateQrCode($data)
+    private function generateQrCode($data)
     {
         $qrCode = QrCode::create($data)
             ->setSize(200)
@@ -117,4 +128,76 @@ class AbsenQrController extends Controller
 
         return $pdf->download('qr_absen_' . $absenqr->tanggal_absen . '.pdf');
     }
+    public function view(Request $request, $id)
+    {
+        $type_menu = 'absen';
+
+        $query = Absen_Qr::with('jadwal.mapel', 'jadwal.kelas')->where('jadwal_id', $id);
+
+        if ($request->filled('nama')) {
+            $query->whereHas('jadwal.guru', function ($q) use ($request) {
+                $q->where('nama', 'like', '%' . $request->nama . '%');
+            });
+        }
+
+        $absenqr = $query->latest()->paginate(10);
+
+        return view('pages.absenqr.view', compact('absenqr', 'type_menu'));
+    }
+    public function createAdd($id)
+    {
+        $type_menu = 'absen';
+        $jadwal = Jadwal::findOrFail($id);
+
+        return view('pages.absenqr.add', compact('type_menu', 'jadwal'));
+    }
+
+    public function storeAdd(Request $request, $id)
+    {
+        $request->validate([
+            'tanggal_absen' => 'required|date',
+            'expired_at' => 'required|date|after:tanggal_absen',
+        ]);
+
+        $jadwal = Jadwal::findOrFail($id);
+
+        $absenqr = Absen_Qr::create([
+            'jadwal_id' => $jadwal->id,
+            'tanggal_absen' => $request->tanggal_absen,
+            'token_qr' => $this->generateQRCodeToken(),
+            'expired_at' => $request->expired_at,
+        ]);
+
+        return redirect()->route('qr.view', ['id' => $jadwal->id])
+            ->with('success', 'QR Token Berhasil di Buat untuk Tanggal Absen ' . $absenqr->tanggal_absen);
+
+    }
+
+    public function ubah($id)
+    {
+        $type_menu = 'absen';
+
+        $absenqr = Absen_Qr::with('jadwal.mapel', 'jadwal.kelas')->findOrFail($id);
+
+        return view('pages.absenqr.ubah', compact('absenqr', 'type_menu'));
+    }
+
+    public function updateUbah(Request $request, Absen_Qr $absen_qr)
+    {
+        $request->validate([
+            'tanggal_absen' => 'required|date',
+            'expired_at' => 'required|date|after:tanggal_absen',
+            'jadwal_id' => 'required|exists:jadwals,id',
+        ]);
+
+        $absen_qr->update([
+            'jadwal_id' => $request->jadwal_id,
+            'tanggal_absen' => $request->tanggal_absen,
+            'expired_at' => $request->expired_at,
+        ]);
+
+        return redirect()->route('qr.view', ['id' => $request->jadwal_id])
+            ->with('success', 'QR Token Berhasil diperbarui untuk Tanggal Absen ' . $absen_qr->tanggal_absen);
+    }
+
 }
