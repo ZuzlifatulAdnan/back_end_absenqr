@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kelas;
+use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,43 +20,84 @@ class ProfileController extends Controller
     public function edit()
     {
         $type_menu = 'profile';
-        return view('pages.profile.edit', compact('type_menu'));
+        $kelasList = Kelas::all(); // jika role siswa
+        return view('pages.profile.edit', compact('type_menu', 'kelasList'));
     }
+
     public function update(Request $request, User $user)
     {
-        $image = $request->file('file');
+        $role = $user->role;
 
-        $validate = $request->validate([
+        // Validasi umum
+        $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'file' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ];
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'no_handphone' => $request->no_handphone,
-        ]);
-
-        if ($image) {
-
-            $path = time() . '.' . $image->getClientOriginalExtension();
-            $image->move('img/user/', $path);
-
-            if ($user->foto) {
-                $oldImagePath = 'img/user/' . $user->foto;
-                if (file_exists($oldImagePath)) {
-                    unlink($oldImagePath);
-                }
-            }
-
-            $user->update([
-                'image' => $path
+        if ($role === 'Siswa') {
+            $rules = array_merge($rules, [
+                'nis' => 'required|unique:siswas,nis,' . ($user->siswa->id ?? 'NULL'),
+                'nisn' => 'required|unique:siswas,nisn,' . ($user->siswa->id ?? 'NULL'),
+                'kelas_id' => 'required|exists:kelas,id',
+                'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+                'no_telepon' => 'required|regex:/^628/',
+            ]);
+        } elseif ($role === 'Guru') {
+            $rules = array_merge($rules, [
+                'nip' => 'required|unique:gurus,nip,' . ($user->guru->id ?? 'NULL'),
+                'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+                'no_telepon' => 'required|regex:/^628/',
             ]);
         }
 
-        return redirect()->route('profile.index')->with('success', 'Data Akun '.$user->name . ' berhasil diperbarui.');
+        $validated = $request->validate($rules);
+
+        // Update user
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        // Update siswa
+        if ($role === 'Siswa' && $user->siswa) {
+            $user->siswa->update([
+                'nis' => $validated['nis'],
+                'nisn' => $validated['nisn'],
+                'kelas_id' => $validated['kelas_id'],
+                'jenis_kelamin' => $validated['jenis_kelamin'],
+                'no_telepon' => $validated['no_telepon'],
+            ]);
+        }
+
+        // Update guru
+        if ($role === 'Guru' && $user->guru) {
+            $user->guru->update([
+                'nip' => $validated['nip'],
+                'jenis_kelamin' => $validated['jenis_kelamin'],
+                'no_telepon' => $validated['no_telepon'],
+            ]);
+        }
+
+        // Update foto jika ada
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto');
+            $filename = time() . '.' . $foto->getClientOriginalExtension();
+            $foto->move(public_path('img/user'), $filename);
+
+            // Hapus gambar lama
+            if ($user->image && file_exists(public_path('img/user/' . $user->image))) {
+                unlink(public_path('img/user/' . $user->image));
+            }
+
+            $user->update([
+                'image' => $filename
+            ]);
+        }
+
+        return redirect()->route('profile.index')->with('success', 'Profil berhasil diperbarui.');
     }
+
     public function changePasswordForm()
     {
         $type_menu = 'profile';
@@ -76,6 +119,6 @@ class ProfileController extends Controller
             'password' => Hash::make($request->new_password),
         ]);
 
-        return redirect()->route('profile.index')->with('success', 'password Akun '.$user->name.' berhasil diperbarui.');
+        return redirect()->route('profile.index')->with('success', 'password Akun ' . $user->name . ' berhasil diperbarui.');
     }
 }

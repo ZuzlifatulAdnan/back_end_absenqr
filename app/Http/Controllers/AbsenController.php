@@ -26,28 +26,32 @@ class AbsenController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = Jadwal::with(['kelas', 'mapel', 'guru.user']);
 
-        // Role: Guru
+        // Cek role dan relasi
         if ($user->role === 'guru') {
-            $guru = $user->Guru; // asumsi relasi guru hasOne
-            if ($guru) {
-                $query->where('guru_id', $guru->id);
-            } else {
-                return $this->emptyResult($request);
+            $guru = $user->guru;
+            if (!$guru) {
+                dd('Guru tidak ditemukan untuk user ID ' . $user->id);
             }
-
-            // Role: Siswa
         } elseif ($user->role === 'siswa') {
-            $siswa = Siswa::where('user_id', $user->id)->first();
-            if ($siswa) {
-                $query->where('kelas_id', $siswa->kelas_id);
-            } else {
-                return $this->emptyResult($request);
+            $siswa = $user->siswa;
+            if (!$siswa) {
+                dd('Siswa tidak ditemukan untuk user ID ' . $user->id);
             }
         }
 
-        // 🔍 Search: Nama Guru atau Mapel
+        // Mulai query
+        $query = Jadwal::with(['kelas', 'mapel', 'guru.user']);
+
+        if ($user->role === 'Guru') {
+            $guru = $user->guru;
+            $query->where('guru_id', $guru->id);
+        } elseif ($user->role === 'Siswa') {
+            $siswa = $user->siswa;
+            $query->where('kelas_id', $siswa->kelas_id);
+        }
+
+        // Filter dan search
         if ($request->filled('q')) {
             $query->where(function ($q1) use ($request) {
                 $q1->whereHas('guru.user', function ($q2) use ($request) {
@@ -58,38 +62,21 @@ class AbsenController extends Controller
             });
         }
 
-        // 📌 Filter Kelas (kecuali siswa)
-        if ($request->filled('kelas_id') && $user->role != 'siswa') {
+        if ($request->filled('kelas_id') && $user->role !== 'siswa') {
             $query->where('kelas_id', $request->kelas_id);
         }
 
-        // 📌 Filter Hari
         if ($request->filled('hari')) {
             $query->where('hari', $request->hari);
         }
 
-        // 🔄 Pagination
         $jadwals = $query->paginate(10)->withQueryString();
-
-        // Daftar kelas hanya untuk admin dan guru
-        $kelasList = ($user->role != 'siswa') ? Kelas::all() : [];
+        $kelasList = ($user->role !== 'Siswa') ? Kelas::all() : [];
 
         return view('pages.absen.index', [
             'type_menu' => 'absen',
             'jadwals' => $jadwals,
             'kelasList' => $kelasList,
-            'selectedKelas' => $request->kelas_id,
-            'selectedHari' => $request->hari,
-            'searchQuery' => $request->q,
-        ]);
-    }
-
-    private function emptyResult(Request $request)
-    {
-        return view('pages.absen.index', [
-            'type_menu' => 'absen',
-            'jadwals' => collect(),
-            'kelasList' => [],
             'selectedKelas' => $request->kelas_id,
             'selectedHari' => $request->hari,
             'searchQuery' => $request->q,
@@ -151,38 +138,65 @@ class AbsenController extends Controller
     public function show(Request $request, $id)
     {
         $jadwal = Jadwal::with('kelas', 'mapel')->findOrFail($id);
-        $kelasList = Kelas::orderBy('nama')->get(); // ambil semua kelas dari DB
+        $kelasList = Kelas::orderBy('nama')->get(); // Ambil daftar kelas
 
-        $query = Absen::with('jadwal.kelas')
-            ->where('jadwal_id', $id);
+        // Ambil semua data absen yang sesuai filter
+        $allAbsen = Absen::with('jadwal.kelas')
+            ->where('jadwal_id', $id)
+            ->when(
+                $request->filled('hari'),
+                fn($q) =>
+                $q->whereHas('jadwal', fn($q2) => $q2->where('hari', $request->hari))
+            )
+            ->when(
+                $request->filled('kelas_id'),
+                fn($q) =>
+                $q->whereHas('jadwal.kelas', fn($q2) => $q2->where('id', $request->kelas_id))
+            )
+            ->when(
+                $request->filled('tanggal'),
+                fn($q) =>
+                $q->whereDate('tanggal_absen', $request->tanggal)
+            )
+            ->get();
 
-        if ($request->filled('hari')) {
-            $query->whereHas('jadwal', fn($q) => $q->where('hari', $request->hari));
-        }
+        // Group berdasarkan pertemuan dan tanggal
+        $grouped = $allAbsen->groupBy(fn($item) => $item->pertemuan_ke . '|' . $item->tanggal_absen);
 
-        if ($request->filled('kelas_id')) {
-            $query->whereHas('jadwal.kelas', fn($q) => $q->where('id', $request->kelas_id));
-        }
+        // Buat data koleksi baru
+        $data = $grouped->map(function ($group) {
+            $first = $group->first();
+            return (object) [
+                'id' => $first->id,
+                'pertemuan_ke' => $first->pertemuan_ke,
+                'tanggal_absen' => $first->tanggal_absen,
+                'jadwal' => $first->jadwal,
+                'total_siswa' => $group->count(),
+                'total_hadir' => $group->where('status', 'H')->count(),
+            ];
+        })->values(); // Reset index
 
-        if ($request->filled('tanggal')) {
-            $query->whereDate('tanggal_absen', $request->tanggal);
-        }
-
-        $absen = $query->orderBy('pertemuan_ke')
-            ->paginate(10)
-            ->through(function ($a) use ($id) {
-                $a->total_hadir = Absen::where('jadwal_id', $id)
-                    ->where('pertemuan_ke', $a->pertemuan_ke)
-                    ->where('status', 'H')->count();
-                $a->total_siswa = Absen::where('jadwal_id', $id)
-                    ->where('pertemuan_ke', $a->pertemuan_ke)->count();
-                return $a;
-            });
+        // Manual pagination
+        $page = $request->input('page', 1);
+        $perPage = 10;
+        $pagedData = new \Illuminate\Pagination\LengthAwarePaginator(
+            $data->forPage($page, $perPage),
+            $data->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         $type_menu = 'absen';
 
-        return view('pages.absen.show', compact('type_menu', 'absen', 'jadwal', 'kelasList'));
+        return view('pages.absen.show', [
+            'type_menu' => $type_menu,
+            'absen' => $pagedData,
+            'jadwal' => $jadwal,
+            'kelasList' => $kelasList,
+        ]);
     }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -245,18 +259,34 @@ class AbsenController extends Controller
     }
     public function rekap($id)
     {
-        // Mengambil data absensi berdasarkan jadwal
-        $absen = Absen::with('Siswa')->where('jadwal_id', $id)->get();
+        $user = Auth::user();
 
-        // Menghitung jumlah pertemuan maksimal
-        $jumlahPertemuan = $absen->max('pertemuan_ke');
+        // Ambil data jadwal
+        $jadwal = Jadwal::findOrFail($id);
 
-        // Menyusun tanggal pertemuan
+        // Query dasar
+        $absenQuery = Absen::with('Siswa')->where('jadwal_id', $id);
+
+        // Jika siswa, filter hanya absensinya sendiri
+        if ($user->role === 'Siswa') {
+            $siswa = $user->siswa;
+            if (!$siswa) {
+                abort(403, 'Data siswa tidak ditemukan untuk user ID ' . $user->id);
+            }
+
+            $absenQuery->where('siswa_id', $siswa->id);
+        }
+
+        // Eksekusi query
+        $absen = $absenQuery->get();
+
+        // Hitung jumlah pertemuan maksimal
+        $jumlahPertemuan = $absen->max('pertemuan_ke') ?? 0;
+
+        // Susun tanggal pertemuan
         $tanggalAbsen = [];
         for ($i = 1; $i <= $jumlahPertemuan; $i++) {
             $pertemuan = $absen->where('pertemuan_ke', $i)->first();
-
-            // Cek apakah $pertemuan dan $pertemuan->tanggal_absen tidak null
             if ($pertemuan && $pertemuan->tanggal_absen) {
                 $tanggalAbsen[$i] = \Carbon\Carbon::parse($pertemuan->tanggal_absen)->format('d-m-Y');
             } else {
@@ -264,18 +294,16 @@ class AbsenController extends Controller
             }
         }
 
-        // Mengelompokkan absensi berdasarkan siswa
+        // Kelompokkan absensi berdasarkan siswa
         $absens = $absen->groupBy('siswa_id');
 
-        // Mengambil data jadwal
-        $jadwal = Jadwal::findOrFail($id);
-
-        // Menentukan tipe menu untuk tampilan
+        // Set menu aktif
         $type_menu = 'absen';
 
-        // Mengembalikan tampilan rekap dengan data yang sudah dikumpulkan
+        // Kirim ke view
         return view('pages.absen.rekap', compact('type_menu', 'absens', 'jadwal', 'jumlahPertemuan', 'tanggalAbsen'));
     }
+
     public function scanForm()
     {
         $type_menu = 'absen';

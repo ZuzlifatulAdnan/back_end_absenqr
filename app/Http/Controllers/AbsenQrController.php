@@ -65,7 +65,7 @@ class AbsenQrController extends Controller
             'expired_at' => $request->expired_at,
         ]);
 
-        return redirect()->route('absenqr.index')->with('success', 'QR Token Berhasil di Buat untuk Tanggal Absen ' . $absenqr->tanggal_absen);
+        return redirect()->route('qr.index')->with('success', 'QR Token Berhasil di Buat untuk Tanggal Absen ' . $absenqr->tanggal_absen);
     }
     public function edit($id)
     {
@@ -76,7 +76,7 @@ class AbsenQrController extends Controller
         return view('pages.absenqr.edit', compact('absenqr', 'type_menu', 'jadwal'));
 
     }
-    public function update(Request $request, Absen_Qr $absen_qr)
+    public function update(Request $request, Absen_Qr $qr)
     {
         $request->validate([
             'jadwal_id' => 'required|exists:jadwals,id',
@@ -84,13 +84,13 @@ class AbsenQrController extends Controller
             'expired_at' => 'required|date|after:tanggal_absen',
         ]);
 
-        $absen_qr->update([
+        $qr->update([
             'jadwal_id' => $request->jadwal_id,
             'tanggal_absen' => $request->tanggal_absen,
             'expired_at' => $request->expired_at,
         ]);
 
-        return redirect()->route('qr.index')->with('success', 'QR Token Berhasil di Perbarui untuk Tanggal Absen ' . $absen_qr->tanggal_absen);
+        return redirect()->route('qr.index')->with('success', 'QR Token Berhasil di Perbarui untuk Tanggal Absen ' . $qr->tanggal_absen);
     }
     private function generateQrCode($data)
     {
@@ -103,6 +103,7 @@ class AbsenQrController extends Controller
 
         return base64_encode($result->getString());
     }
+
     public function show($id)
     {
         $type_menu = 'absen';
@@ -112,6 +113,18 @@ class AbsenQrController extends Controller
         // 2. Kirim data tersebut ke file view
         return view('pages.absenqr.show', compact('absenqr', 'type_menu'));
     }
+    public function destroy(Absen_Qr $qr)
+    {
+        $tanggal = $qr->tanggal_absen;
+
+        try {
+            $qr->delete();
+            return redirect()->route('qr.index')->with('success', "Data absen QR tanggal $tanggal berhasil dihapus.");
+        } catch (\Exception $e) {
+            return redirect()->route('qr.index')->with('error', "Gagal menghapus data: " . $e->getMessage());
+        }
+    }
+
     public function downloadPDF($id)
     {
         $absenqr = Absen_Qr::findOrFail($id);

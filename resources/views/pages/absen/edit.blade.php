@@ -62,6 +62,7 @@
                                                     </td>
                                                     <td>
                                                         <select class="form-control" name="kehadiran[{{ $n->id }}]">
+                                                            <option value=""></option>
                                                             <option value="H"
                                                                 {{ $attendance && $attendance->status == 'H' ? 'selected' : '' }}>
                                                                 Hadir</option>

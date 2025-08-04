@@ -28,7 +28,8 @@
                                     <select name="kelas_id" class="form-control">
                                         <option value="">-- Semua Kelas --</option>
                                         @foreach ($kelasList as $kelas)
-                                            <option value="{{ $kelas->id }}" {{ $selectedKelas == $kelas->id ? 'selected' : '' }}>
+                                            <option value="{{ $kelas->id }}"
+                                                {{ $selectedKelas == $kelas->id ? 'selected' : '' }}>
                                                 {{ $kelas->nama }}
                                             </option>
                                         @endforeach
@@ -92,7 +93,7 @@
                                                 </a>
                                             @endif
 
-                                            @if (Auth::user()->role == 'Admin')
+                                            @if (Auth::user()->role == 'Admin' || Auth::user()->role == 'Guru')
                                                 <a href="{{ route('qr.view', $item->id) }}"
                                                     class="btn btn-sm btn-icon btn-success m-1" title="Generate QR">
                                                     <i class="fas fa-qrcode"></i>
@@ -105,11 +106,12 @@
                                                     <i class="fas fa-list"></i>
                                                 </a>
                                             @endif
-
-                                            <a href="{{ route('absen.scan', $item) }}"
-                                                class="btn btn-sm btn-icon btn-warning m-1" title="Scan QR">
-                                                <i class="fas fa-camera"></i>
-                                            </a>
+                                            @if (Auth::user()->role == 'Siswa')
+                                                <a href="{{ route('absen.scan', $item) }}"
+                                                    class="btn btn-sm btn-icon btn-warning m-1" title="Scan QR">
+                                                    <i class="fas fa-camera"></i>
+                                                </a>
+                                            @endif
 
                                             <a href="{{ route('absen.rekap', $item) }}"
                                                 class="btn btn-sm btn-icon btn-primary m-1" title="Rekap Absen">
@@ -128,7 +130,8 @@
 
                     <div class="card-footer d-flex justify-content-between">
                         <div>
-                            Menampilkan {{ $jadwals->firstItem() }} - {{ $jadwals->lastItem() }} dari {{ $jadwals->total() }} data
+                            Menampilkan {{ $jadwals->firstItem() }} - {{ $jadwals->lastItem() }} dari
+                            {{ $jadwals->total() }} data
                         </div>
                         <div>
                             {{ $jadwals->withQueryString()->links('pagination::bootstrap-4') }}

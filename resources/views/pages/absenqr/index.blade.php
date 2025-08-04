@@ -70,7 +70,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button class="btn btn-sm btn-icon m-1 btn-danger confirm-delete"
-                                                        data-toggle="tooltip" title="Hapus Guru">
+                                                        data-toggle="tooltip" title="Hapus Qr">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>

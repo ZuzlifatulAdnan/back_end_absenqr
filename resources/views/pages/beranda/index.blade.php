@@ -45,9 +45,10 @@
 
 @section('main')
     <div class="main-content">
+
         {{-- Welcome --}}
         <div class="welcome-card mb-4 bg-white">
-            <img src="{{ asset('img/logo/hi.png' ) }}" alt="welcome">
+            <img src="{{ asset('img/logo/hi.png') }}" alt="welcome">
             <div>
                 <h5>Hai, {{ Auth::user()->role }}</h5>
                 <p>Selamat datang di Sistem Presensi Kelas SMA KARTIKATAMA METRO.
@@ -108,26 +109,73 @@
         <div class="card mt-4">
             <div class="card-body">
                 <div class="jadwal-header">
-                    <h4>Jadwal Mengajar</h4>
+                    <h4 class="mb-0">Jadwal Mengajar</h4>
+
+                    {{-- Filter Hari --}}
+                    <form method="GET" class="form-inline">
+                        <label for="hari" class="mr-2">Hari:</label>
+                        <select name="hari" id="hari" class="form-control" onchange="this.form.submit()">
+                            <option value="">Semua</option>
+                            @foreach ($daftar_hari as $hari)
+                                <option value="{{ $hari }}" {{ $filterHari == $hari ? 'selected' : '' }}>
+                                    {{ ucfirst($hari) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
                 </div>
 
                 @if ($jadwal->isEmpty())
-                    <div class="alert alert-info">Tidak ada jadwal untuk hari ini.</div>
+                    <div class="alert alert-info mt-3">Tidak ada jadwal untuk hari
+                        ini{{ $filterHari ? " ($filterHari)" : '' }}.</div>
                 @else
                     @foreach ($jadwal as $item)
+                        @php
+                            $hariMap = [
+                                'Senin' => 0,
+                                'Selasa' => 1,
+                                'Rabu' => 2,
+                                'Kamis' => 3,
+                                'Jumat' => 4,
+                                'Sabtu' => 5,
+                                'Minggu' => 6,
+                            ];
+                            $indexHari = $hariMap[$item->hari] ?? 0;
+                            $tanggalPertemuan = \Carbon\Carbon::now()
+                                ->startOfWeek()
+                                ->addDays($indexHari)
+                                ->format('d-m-Y');
+                        @endphp
+
                         <div class="jadwal-card">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5>{{ strtoupper($item->mapel->nama) }}</h5>
+                                    <h5>{{ strtoupper($item->mapel->nama ?? '-') }}</h5>
+                                    <p><i class="fas fa-calendar-day"></i> Hari: {{ ucfirst($item->hari) }}</p>
                                     <p><i class="fas fa-clock"></i> {{ $item->jam_mulai }} - {{ $item->jam_selesai }} WIB
                                     </p>
-                                    <p><i class="fas fa-users"></i> Kelas {{ $item->kelas->nama }}</p>
+                                    <p><i class="fas fa-users"></i> Kelas {{ $item->kelas->nama ?? '-' }}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p>Pertemuan ke 1</p>
-                                    {{-- <a href="{{ route('generate.qr', $item->id) }}" class="btn btn-outline-primary">
-                                        <i class="fas fa-qrcode"></i> Generate Kode QR
-                                    </a> --}}
+                                    <p><i class="fas fa-calendar"></i> Tanggal: {{ $tanggalPertemuan }}</p>
+                                    {{-- Tombol Aksi Berdasarkan Role --}}
+                                    <div class="mt-3">
+                                        @php
+                                            $user = Auth::user();
+                                            $role = $user->role;
+                                        @endphp
+
+                                        @if ($role === 'Admin' || $role === 'Guru')
+                                            <a href="{{ route('qr.view', $item->id) }}" class="btn btn-primary">
+                                                <i class="fas fa-qrcode"></i> Kelola QR Presensi
+                                            </a>
+                                        @elseif ($role === 'Siswa')
+                                            <a href="{{ route('absen.scan', $item) }}" class="btn btn-success">
+                                                <i class="fas fa-camera"></i> Scan QR Presensi
+                                            </a>
+                                        @endif
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -135,6 +183,7 @@
                 @endif
             </div>
         </div>
+
     </div>
 @endsection
 

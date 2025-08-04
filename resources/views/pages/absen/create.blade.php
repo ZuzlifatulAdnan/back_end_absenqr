@@ -46,7 +46,7 @@
                                                         <input type="hidden" value="{{ $n->id }}" name="siswa_id[]">
                                                         <input type="hidden" name="jadwal_id" value="{{ $n->id }}">
 
-                                                        {{ $n->nama }}
+                                                        {{ $n->user->name }}
                                                     </td>
                                                     <td>
                                                         <select class="form-control kehadiran-select" name="kehadiran[{{ $n->id }}]">

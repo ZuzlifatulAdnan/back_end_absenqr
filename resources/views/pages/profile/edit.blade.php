@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Profile')
+@section('title', 'Edit Profil')
 
 @push('style')
     <link rel="stylesheet" href="{{ asset('library/selectric/public/selectric.css') }}">
@@ -10,129 +10,196 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Profile</h1>
+                <h1>Edit Profil</h1>
                 <div class="section-header-breadcrumb">
-                    <div class="breadcrumb-item active"><a href="{{ route('profile.index') }}">Profile</a></div>
-                    <div class="breadcrumb-item">Edit Profile</div>
+                    <div class="breadcrumb-item"><a href="{{ route('profile.index') }}">Profil</a></div>
+                    <div class="breadcrumb-item active">Edit</div>
                 </div>
             </div>
+
             <div class="section-body">
-                <div class="row">
-                    <div class="col-12">
-                        <form action="{{ route('profile.update', Auth::user()) }}" enctype="multipart/form-data"
-                            method="POST">
-                            @csrf
-                            <div class="row">
-                                <div class="col-12 col-md-12 col-lg-4">
-                                    <div class="card profile-widget">
-                                        <div class="profile-widget-header">
-                                            <img alt="image" id="image-preview"
-                                                src="{{ Auth::user()->foto ? asset('img/avatar/' . Auth::user()->foto) : asset('img/avatar/avatar-1.png') }}"
-                                                class="rounded-circle profile-widget-picture" width="100" height="100">
-                                        </div>
-                                        <div class="p-3">
-                                            <div class="custom-file">
-                                                <input type="file" class="custom-file-input" id="file-input"
-                                                    name="file" id="file-input" accept="image/*"
-                                                    onchange="previewImage()">
-                                                <label class="custom-file-label" for="customFile">Choose file</label>
-                                            </div>
-                                            @error('file')
-                                                <div class="invalid-feedback">
-                                                    {{ $message }}
-                                                </div>
+                @include('layouts.alert')
+                <form action="{{ route('profile.update', Auth::user()) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="row">
+                        <!-- Kolom Foto -->
+                        <div class="col-lg-4">
+                            <div class="card profile-widget">
+                                <div class="profile-widget-header">
+                                    <img id="image-preview"
+                                        src="{{ Auth::user()->image ? asset('img/user/' . Auth::user()->image) : asset('img/avatar/avatar-1.png') }}"
+                                        class="rounded-circle profile-widget-picture"
+                                        style="width: 100px; height: 100px; object-fit: cover;">
+                                </div>
+                                <div class="p-3">
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input @error('foto') is-invalid @enderror"
+                                            id="file-input" name="foto" accept="image/*" onchange="previewImage()">
+                                        <label class="custom-file-label" for="file-input">Pilih foto</label>
+                                        @error('foto')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="profile-widget-description">
+                                    <div class="profile-widget-name">
+                                        {{ Auth::user()->email }} - {{ Auth::user()->role }}
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <button class="btn btn-primary btn-block">Simpan</button>
+                                    <a href="{{ route('profile.index') }}" class="btn btn-warning btn-block">Kembali</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kolom Form -->
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>Edit Akun</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <!-- Name -->
+                                        <div class="form-group col-md-6">
+                                            <label>Nama</label>
+                                            <input type="text" class="form-control @error('name') is-invalid @enderror"
+                                                name="name" value="{{ old('name', Auth::user()->name) }}">
+                                            @error('name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
 
-                                        <div class="profile-widget-description">
-                                            <div class="profile-widget-name">
-                                                {{ Auth::user()->email }} -
-                                                {{ Auth::user()->role }}
-                                            </div>
-
-                                        </div>
-                                        <div class="card-footer">
-
-                                            <button class="btn btn-primary btn-lg btn-block">Simpan
-                                            </button>
-                                            <a href="{{ route('profile.index') }}"
-                                                class="btn btn-warning btn-lg btn-block">Kembali</a>
+                                        <!-- Email -->
+                                        <div class="form-group col-md-6">
+                                            <label>Email</label>
+                                            <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                                name="email" value="{{ old('email', Auth::user()->email) }}">
+                                            @error('email')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-12 col-md-12 col-lg-8">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h4>Edit Akun</h4>
-                                        </div>
-                                        <div class="card-body">
-                                            <input type="hidden" class="form-control" id="Roles" name="Roles"
-                                                value="{{ Auth::user()->role }}">
-                                            <div class="row">
-                                                <div class="form-group col-md-6 mb-3">
-                                                    <label for="name" class="form-label">Name</label>
-                                                    <input type="text"
-                                                        class="form-control @error('name') is-invalid
 
-                                                    @enderror"
-                                                        id="name" name="name" value="{{ Auth::user()->name }}">
-                                                    @error('name')
-                                                        <div class="invalid-feedback">
-                                                            {{ $message }}
-                                                        </div>
-                                                    @enderror
-                                                </div>
-                                                <div class="form-group col-md-6 mb-3">
-                                                    <label for="email" class="form-label">Email</label>
-                                                    <input type="email"
-                                                        class="form-control @error('email') is-invalid
-                                                    @enderror"
-                                                        name="email" id="email" value="{{ Auth::user()->email }}">
-                                                    @error('email')
-                                                        <div class="invalid-feedback">
-                                                            {{ $message }}
-                                                        </div>
-                                                    @enderror
-                                                </div>
+                                    @if (Auth::user()->role === 'Siswa')
+                                        <!-- Form Siswa -->
+                                        <div class="row">
+                                            <div class="form-group col-md-6">
+                                                <label>NIS</label>
+                                                <input type="text" name="nis"
+                                                    class="form-control @error('nis') is-invalid @enderror"
+                                                    value="{{ old('nis', Auth::user()->siswa->nis ?? '') }}">
+                                                @error('nis')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>NISN</label>
+                                                <input type="text" name="nisn"
+                                                    class="form-control @error('nisn') is-invalid @enderror"
+                                                    value="{{ old('nisn', Auth::user()->siswa->nisn ?? '') }}">
+                                                @error('nisn')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>Jenis Kelamin</label>
+                                                <select name="jenis_kelamin" class="form-control selectric">
+                                                    <option value="Laki-laki"
+                                                        {{ (Auth::user()->siswa->jenis_kelamin ?? '') === 'Laki-laki' ? 'selected' : '' }}>
+                                                        Laki-laki</option>
+                                                    <option value="Perempuan"
+                                                        {{ (Auth::user()->siswa->jenis_kelamin ?? '') === 'Perempuan' ? 'selected' : '' }}>
+                                                        Perempuan</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>No Telepon</label>
+                                                <input type="text" name="no_telepon"
+                                                    class="form-control @error('no_telepon') is-invalid @enderror"
+                                                    value="{{ old('no_telepon', Auth::user()->siswa->no_telepon ?? '') }}">
+                                                @error('no_telepon')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>Kelas</label>
+                                                <select name="kelas_id" class="form-control selectric">
+                                                    @foreach ($kelasList as $kelas)
+                                                        <option value="{{ $kelas->id }}"
+                                                            {{ (Auth::user()->siswa->kelas_id ?? '') == $kelas->id ? 'selected' : '' }}>
+                                                            {{ $kelas->nama }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                         </div>
-                                    </div>
+                                    @elseif (Auth::user()->role === 'Guru')
+                                        <!-- Form Guru -->
+                                        <div class="row">
+                                            <div class="form-group col-md-6">
+                                                <label>NIP</label>
+                                                <input type="text" name="nip"
+                                                    class="form-control @error('nip') is-invalid @enderror"
+                                                    value="{{ old('nip', Auth::user()->guru->nip ?? '') }}">
+                                                @error('nip')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>Jenis Kelamin</label>
+                                                <select name="jenis_kelamin" class="form-control selectric">
+                                                    <option value="Laki-laki"
+                                                        {{ (Auth::user()->guru->jenis_kelamin ?? '') === 'Laki-laki' ? 'selected' : '' }}>
+                                                        Laki-laki</option>
+                                                    <option value="Perempuan"
+                                                        {{ (Auth::user()->guru->jenis_kelamin ?? '') === 'Perempuan' ? 'selected' : '' }}>
+                                                        Perempuan</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>No Telepon</label>
+                                                <input type="text" name="no_telepon"
+                                                    class="form-control @error('no_telepon') is-invalid @enderror"
+                                                    value="{{ old('no_telepon', Auth::user()->guru->no_telepon ?? '') }}">
+                                                @error('no_telepon')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    @endif
+
                                 </div>
                             </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
+                </form>
             </div>
         </section>
     </div>
 @endsection
 
 @push('scripts')
-    <!-- JS Libraies -->
     <script src="{{ asset('library/selectric/public/jquery.selectric.min.js') }}"></script>
     <script>
         function previewImage() {
-            var fileInput = document.getElementById('file-input');
-            var imagePreview = document.getElementById('image-preview');
+            const fileInput = document.getElementById('file-input');
+            const imagePreview = document.getElementById('image-preview');
 
-            // Cek apakah ada file yang dipilih
             if (fileInput.files && fileInput.files[0]) {
-                var reader = new FileReader();
-
+                const reader = new FileReader();
                 reader.onload = function(e) {
-                    // Menetapkan src gambar pratinjau dengan data URL dari file yang dipilih
                     imagePreview.src = e.target.result;
                 }
-
-                // Membaca file sebagai data URL
                 reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                // Jika tidak ada file yang dipilih, menetapkan src ke gambar default
-                imagePreview.src = "{{ asset('img/avatar/avatar-1.png') }}";
             }
         }
     </script>
-
-    <!-- Page Specific JS File -->
-    <script src="{{ asset('js/page/features-posts.js') }}"></script>
 @endpush

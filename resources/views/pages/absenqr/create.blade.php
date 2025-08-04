@@ -37,7 +37,7 @@
                             </div>
 
                             <button type="submit" class="btn btn-primary">Simpan</button>
-                            <a href="{{ route('absenqr.index') }}" class="btn btn-warning">Batal</a>
+                            <a href="{{ route('qr.index') }}" class="btn btn-warning">Batal</a>
                         </form>
                     </div>
                 </div>
