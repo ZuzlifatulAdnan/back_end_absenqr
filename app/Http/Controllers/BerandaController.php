@@ -23,16 +23,15 @@ class BerandaController extends Controller
         $jumlah_siswa = Siswa::count();
         $jumlah_mapel = Mapel::count();
 
-        // Hari-hari unik dari tabel jadwal
-        $daftar_hari = Jadwal::select('hari')->distinct()->pluck('hari');
+        $daftar_hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
 
         $user = Auth::user();
-        $role = strtolower($user->role); // lowercase
+        $role = strtolower($user->role);
         $filterHari = $request->input('hari');
 
-        $jadwalQuery = Jadwal::with(['mapel', 'kelas', 'guru.user'])->orderBy('jam_mulai');
+        $jadwalQuery = Jadwal::with(['mapel', 'kelas', 'guru.user']);
 
-        // Filter berdasarkan role
         if ($role === 'guru') {
             $guru_id = optional($user->guru)->id;
             $jadwalQuery->where('guru_id', $guru_id ?: 0);
@@ -41,28 +40,16 @@ class BerandaController extends Controller
             $jadwalQuery->where('kelas_id', $kelas_id ?: 0);
         }
 
-        // Filter hari
         if ($filterHari) {
             $jadwalQuery->where('hari', $filterHari);
         }
 
-        $jadwal = $jadwalQuery->get();
-
         // Urutan hari manual
-        $urutanHari = [
-            'Senin' => 1,
-            'Selasa' => 2,
-            'Rabu' => 3,
-            'Kamis' => 4,
-            'Jumat' => 5,
-            'Sabtu' => 6,
-            'Minggu' => 7,
-        ];
+        $jadwalQuery->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
+            ->orderBy('jam_mulai');
 
-        // Urutkan berdasarkan urutan hari dan jam_mulai
-        $jadwal = $jadwal->sortBy(function ($item) use ($urutanHari) {
-            return ($urutanHari[$item->hari] ?? 999) . $item->jam_mulai;
-        });
+        // Paginate
+        $jadwal = $jadwalQuery->paginate(5);
 
         return view('pages.beranda.index', compact(
             'type_menu',

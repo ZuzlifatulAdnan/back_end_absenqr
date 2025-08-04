@@ -3,8 +3,6 @@
 @section('title', 'Beranda')
 
 @push('style')
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
     <style>
         .welcome-card {
             display: flex;
@@ -26,19 +24,11 @@
             padding: 1rem;
         }
 
-        .jadwal-card h5 {
-            margin: 0 0 0.5rem 0;
-        }
-
         .jadwal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
-        }
-
-        .datepicker-dropdown {
-            z-index: 9999 !important;
         }
     </style>
 @endpush
@@ -51,9 +41,7 @@
             <img src="{{ asset('img/logo/hi.png') }}" alt="welcome">
             <div>
                 <h5>Hai, {{ Auth::user()->role }}</h5>
-                <p>Selamat datang di Sistem Presensi Kelas SMA KARTIKATAMA METRO.
-                    Silahkan melakukan generate kode QR dengan mengatur ikon QR pada kelas yang diajar untuk membuka
-                    presensi.</p>
+                <p>Selamat datang di Sistem Presensi Kelas SMA KARTIKATAMA METRO.</p>
             </div>
         </div>
 
@@ -111,7 +99,6 @@
                 <div class="jadwal-header">
                     <h4 class="mb-0">Jadwal Mengajar</h4>
 
-                    {{-- Filter Hari --}}
                     <form method="GET" class="form-inline">
                         <label for="hari" class="mr-2">Hari:</label>
                         <select name="hari" id="hari" class="form-control" onchange="this.form.submit()">
@@ -126,8 +113,8 @@
                 </div>
 
                 @if ($jadwal->isEmpty())
-                    <div class="alert alert-info mt-3">Tidak ada jadwal untuk hari
-                        ini{{ $filterHari ? " ($filterHari)" : '' }}.</div>
+                    <div class="alert alert-info">Tidak ada jadwal untuk hari ini{{ $filterHari ? " ($filterHari)" : '' }}.
+                    </div>
                 @else
                     @foreach ($jadwal as $item)
                         @php
@@ -158,12 +145,8 @@
                                 </div>
                                 <div class="text-right">
                                     <p><i class="fas fa-calendar"></i> Tanggal: {{ $tanggalPertemuan }}</p>
-                                    {{-- Tombol Aksi Berdasarkan Role --}}
                                     <div class="mt-3">
-                                        @php
-                                            $user = Auth::user();
-                                            $role = $user->role;
-                                        @endphp
+                                        @php $role = Auth::user()->role; @endphp
 
                                         @if ($role === 'Admin' || $role === 'Guru')
                                             <a href="{{ route('qr.view', $item->id) }}" class="btn btn-primary">
@@ -175,17 +158,18 @@
                                             </a>
                                         @endif
                                     </div>
-
                                 </div>
                             </div>
                         </div>
                     @endforeach
+
+                    {{-- PAGINATION --}}
+                    <div class="mt-3">
+                        {{ $jadwal->appends(request()->query())->links() }}
+                    </div>
                 @endif
             </div>
         </div>
 
     </div>
 @endsection
-
-@push('script')
-@endpush
