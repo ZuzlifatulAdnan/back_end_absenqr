@@ -23,7 +23,7 @@
                                     value="{{ $searchQuery }}">
                             </div>
 
-                            @if (Auth::user()->role != 'siswa')
+                            @if (Auth::user()->role != 'Siswa')
                                 <div class="input-group mr-2">
                                     <select name="kelas_id" class="form-control">
                                         <option value="">-- Semua Kelas --</option>

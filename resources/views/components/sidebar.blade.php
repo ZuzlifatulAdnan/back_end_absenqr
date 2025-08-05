@@ -28,6 +28,11 @@
                     </a>
                 </li>
             @endif
+             <li class="{{ $type_menu === 'izin' ? 'active' : '' }}">
+                    <a href="{{ route('izin.index') }}" class="nav-link">
+                        <i class="fas fa-user-clock"></i><span>Izin</span>
+                    </a>
+                </li>
             @if (Auth::user()->role === 'Admin')
                 <li class="nav-item dropdown {{ $type_menu === 'absen' ? 'active' : '' }}">
                     <a href="#" class="nav-link has-dropdown">
@@ -42,6 +47,7 @@
                         </li>
                     </ul>
                 </li>
+               
                 <li class="nav-item dropdown {{ $type_menu === 'sekolah' ? 'active' : '' }}">
                     <a href="#" class="nav-link has-dropdown">
                         <i class="fas fa-school"></i><span>Kelola Sekolah</span>

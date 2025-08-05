@@ -11,6 +11,7 @@
             background: #f9f9f9;
             padding: 1rem;
             border-radius: 8px;
+            flex-wrap: wrap;
         }
 
         .welcome-card img {
@@ -24,81 +25,104 @@
             padding: 1rem;
         }
 
-        .jadwal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
+        @media (max-width: 576px) {
+            .welcome-card img {
+                max-width: 80px;
+            }
+
+            .jadwal-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .jadwal-card .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .jadwal-card .text-right {
+                text-align: left !important;
+            }
         }
     </style>
 @endpush
 
 @section('main')
     <div class="main-content">
-
         {{-- Welcome --}}
         <div class="welcome-card mb-4 bg-white">
             <img src="{{ asset('img/logo/hi.png') }}" alt="welcome">
             <div>
-                <h5>Hai, {{ Auth::user()->role }}</h5>
+                <h5>Hai, {{ Auth::user()->name }}</h5>
                 <p>Selamat datang di Sistem Presensi Kelas SMA KARTIKATAMA METRO.</p>
             </div>
         </div>
 
         {{-- Statistik --}}
         <div class="row">
-            <div class="col-md-3">
-                <div class="card card-statistic-1">
-                    <div class="card-icon bg-primary"><i class="fas fa-users"></i></div>
-                    <div class="card-wrap">
-                        <div class="card-header">
-                            <h4>Users</h4>
+            @if (Auth::user()->role == 'Admin')
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card card-statistic-1">
+                        <div class="card-icon bg-primary"><i class="fas fa-users"></i></div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Users</h4>
+                            </div>
+                            <div class="card-body">{{ $jumlah_user }}</div>
                         </div>
-                        <div class="card-body">{{ $jumlah_user }}</div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-statistic-1">
-                    <div class="card-icon bg-info"><i class="fas fa-chalkboard-teacher"></i></div>
-                    <div class="card-wrap">
-                        <div class="card-header">
-                            <h4>Guru</h4>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card card-statistic-1">
+                        <div class="card-icon bg-info"><i class="fas fa-chalkboard-teacher"></i></div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Guru</h4>
+                            </div>
+                            <div class="card-body">{{ $jumlah_guru }}</div>
                         </div>
-                        <div class="card-body">{{ $jumlah_guru }}</div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-statistic-1">
-                    <div class="card-icon bg-success"><i class="fas fa-user-graduate"></i></div>
-                    <div class="card-wrap">
-                        <div class="card-header">
-                            <h4>Siswa</h4>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card card-statistic-1">
+                        <div class="card-icon bg-success"><i class="fas fa-user-graduate"></i></div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Siswa</h4>
+                            </div>
+                            <div class="card-body">{{ $jumlah_siswa }}</div>
                         </div>
-                        <div class="card-body">{{ $jumlah_siswa }}</div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-statistic-1">
-                    <div class="card-icon bg-warning"><i class="fas fa-book"></i></div>
-                    <div class="card-wrap">
-                        <div class="card-header">
-                            <h4>Mapel</h4>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card card-statistic-1">
+                        <div class="card-icon bg-warning"><i class="fas fa-book"></i></div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Mapel</h4>
+                            </div>
+                            <div class="card-body">{{ $jumlah_mapel }}</div>
                         </div>
-                        <div class="card-body">{{ $jumlah_mapel }}</div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         {{-- Jadwal --}}
         <div class="card mt-4">
             <div class="card-body">
-                <div class="jadwal-header">
-                    <h4 class="mb-0">Jadwal Mengajar</h4>
-
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                    @php $role = Auth::user()->role; @endphp
+                    <h4 class="mb-2">
+                        @if ($role == 'Admin')
+                            Daftar Jadwal
+                        @elseif($role == 'Guru')
+                            Jadwal Mengajar
+                        @else
+                            Jadwal Pelajaran
+                        @endif
+                    </h4>
                     <form method="GET" class="form-inline">
                         <label for="hari" class="mr-2">Hari:</label>
                         <select name="hari" id="hari" class="form-control" onchange="this.form.submit()">
@@ -135,25 +159,25 @@
                         @endphp
 
                         <div class="jadwal-card">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
                                 <div>
-                                    <h5>{{ strtoupper($item->mapel->nama ?? '-') }}</h5>
+                                    <h5>{{ strtoupper(optional($item->mapel)->nama) }}</h5>
                                     <p><i class="fas fa-calendar-day"></i> Hari: {{ ucfirst($item->hari) }}</p>
                                     <p><i class="fas fa-clock"></i> {{ $item->jam_mulai }} - {{ $item->jam_selesai }} WIB
                                     </p>
-                                    <p><i class="fas fa-users"></i> Kelas {{ $item->kelas->nama ?? '-' }}</p>
+                                    <p><i class="fas fa-users"></i> Kelas {{ optional($item->kelas)->nama }}</p>
                                 </div>
                                 <div class="text-right">
                                     <p><i class="fas fa-calendar"></i> Tanggal: {{ $tanggalPertemuan }}</p>
                                     <div class="mt-3">
-                                        @php $role = Auth::user()->role; @endphp
-
                                         @if ($role === 'Admin' || $role === 'Guru')
-                                            <a href="{{ route('qr.view', $item->id) }}" class="btn btn-primary">
+                                            <a href="{{ route('qr.view', $item->id) }}"
+                                                class="btn btn-primary btn-block mb-2">
                                                 <i class="fas fa-qrcode"></i> Kelola QR Presensi
                                             </a>
                                         @elseif ($role === 'Siswa')
-                                            <a href="{{ route('absen.scan', $item) }}" class="btn btn-success">
+                                            <a href="{{ route('absen.scan', $item) }}"
+                                                class="btn btn-success btn-block mb-2">
                                                 <i class="fas fa-camera"></i> Scan QR Presensi
                                             </a>
                                         @endif
@@ -170,6 +194,5 @@
                 @endif
             </div>
         </div>
-
     </div>
 @endsection

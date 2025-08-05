@@ -145,7 +145,12 @@ class AbsenQrController extends Controller
     {
         $type_menu = 'absen';
 
-        $query = Absen_Qr::with('jadwal.mapel', 'jadwal.kelas')->where('jadwal_id', $id);
+        // Ambil data jadwal untuk ditampilkan di atas
+        $jadwal = Jadwal::with('mapel', 'kelas')->find($id);
+
+        // Ambil semua absen_qr berdasarkan jadwal_id
+        $query = Absen_Qr::with('jadwal.mapel', 'jadwal.kelas', 'jadwal.guru')
+            ->where('jadwal_id', $id);
 
         if ($request->filled('nama')) {
             $query->whereHas('jadwal.guru', function ($q) use ($request) {
@@ -155,8 +160,9 @@ class AbsenQrController extends Controller
 
         $absenqr = $query->latest()->paginate(10);
 
-        return view('pages.absenqr.view', compact('absenqr', 'type_menu'));
+        return view('pages.absenqr.view', compact('absenqr', 'jadwal', 'type_menu'));
     }
+
     public function createAdd($id)
     {
         $type_menu = 'absen';

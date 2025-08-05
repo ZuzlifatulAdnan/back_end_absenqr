@@ -12,6 +12,7 @@ use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Exports\RekapAbsensiExport;
+use App\Http\Controllers\IzinController;
 use Maatwebsite\Excel\Facades\Excel;
 
 
@@ -43,6 +44,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('guru', GuruController::class);
     // Jadwal
     Route::resource('jadwal', JadwalController::class);
+    // izin
+    Route::resource('izin', IzinController::class);
     // kelas
     Route::resource('kelas', KelasController::class)->parameters([
         'kelas' => 'kelas'

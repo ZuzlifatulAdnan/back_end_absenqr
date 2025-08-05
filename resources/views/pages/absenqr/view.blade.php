@@ -11,8 +11,10 @@
         <section class="section">
             @include('layouts.alert')
             <div class="section-header">
-                <h1>View Absen QR | {{ optional($absenqr->first()->jadwal->mapel)->nama ?? '-' }} |
-                    {{ optional($absenqr->first()->jadwal->kelas)->nama ?? '-' }}</h1>
+                <h1>View Absen QR |
+                    {{ $jadwal?->mapel?->nama ?? '-' }} |
+                    {{ $jadwal?->kelas?->nama ?? '-' }}
+                </h1>
             </div>
 
             <div class="section-body">
