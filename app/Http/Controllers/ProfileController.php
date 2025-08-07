@@ -37,11 +37,18 @@ class ProfileController extends Controller
 
         if ($role === 'Siswa') {
             $rules = array_merge($rules, [
+                // siswa
                 'nis' => 'required|unique:siswas,nis,' . ($user->siswa->id ?? 'NULL'),
                 'nisn' => 'required|unique:siswas,nisn,' . ($user->siswa->id ?? 'NULL'),
                 'kelas_id' => 'required|exists:kelas,id',
                 'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
                 'no_telepon' => 'required|regex:/^628/',
+                // orangtua
+                'nama' => 'required',
+                'alamat' => 'required',
+                'pekerjaan' => 'required',
+                'no_telepon_ortu' => 'required|regex:/^628/',
+                'hubungan' => 'required',
             ]);
         } elseif ($role === 'Guru') {
             $rules = array_merge($rules, [
@@ -68,6 +75,26 @@ class ProfileController extends Controller
                 'jenis_kelamin' => $validated['jenis_kelamin'],
                 'no_telepon' => $validated['no_telepon'],
             ]);
+
+            // Update atau buat data orangtua
+            if ($user->siswa->ortu) {
+                $user->siswa->ortu->update([
+                    'nama' => $validated['nama'],
+                    'alamat' => $validated['alamat'],
+                    'pekerjaan' => $validated['pekerjaan'],
+                    'no_telepon' => $validated['no_telepon_ortu'],
+                    'hubungan' => $validated['hubungan'],
+                ]);
+            } else {
+                // Buat data orangtua jika belum ada
+                $user->siswa->ortu()->create([
+                    'nama' => $validated['nama'],
+                    'alamat' => $validated['alamat'],
+                    'pekerjaan' => $validated['pekerjaan'],
+                    'no_telepon' => $validated['no_telepon_ortu'],
+                    'hubungan' => $validated['hubungan'],
+                ]);
+            }
         }
 
         // Update guru

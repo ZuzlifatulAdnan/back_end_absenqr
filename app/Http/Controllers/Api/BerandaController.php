@@ -3,47 +3,62 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Guru;
+use App\Models\Jadwal;
+use App\Models\Mapel;
+use App\Models\Siswa;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;;
 
 class BerandaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+     public function index(Request $request)
     {
-        //
-    }
+        $user = Auth::user();
+        $role = strtolower($user->role);
+        $filterHari = $request->input('hari');
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        // Statistik (khusus Admin)
+        $statistik = null;
+        if ($role === 'admin') {
+            $statistik = [
+                'jumlah_user' => User::count(),
+                'jumlah_guru' => Guru::count(),
+                'jumlah_siswa' => Siswa::count(),
+                'jumlah_mapel' => Mapel::count(),
+            ];
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        $jadwalQuery = Jadwal::with(['mapel', 'kelas', 'guru.user']);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        // Filter berdasarkan role
+        if ($role === 'guru') {
+            $guru_id = optional($user->guru)->id;
+            $jadwalQuery->where('guru_id', $guru_id ?: 0);
+        } elseif ($role === 'siswa') {
+            $kelas_id = optional($user->siswa)->kelas_id;
+            $jadwalQuery->where('kelas_id', $kelas_id ?: 0);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        // Filter hari
+        if ($filterHari) {
+            $jadwalQuery->where('hari', $filterHari);
+        }
+
+        // Urutkan hari & jam
+        $jadwalQuery->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
+                    ->orderBy('jam_mulai');
+
+        // Paginate hasil jadwal
+        $jadwal = $jadwalQuery->paginate(5);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data beranda berhasil diambil.',
+            'role' => $user->role,
+            'statistik' => $statistik,
+            'jadwal' => $jadwal,
+        ]);
     }
 }

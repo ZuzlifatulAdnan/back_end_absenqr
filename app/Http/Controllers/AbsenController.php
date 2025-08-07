@@ -28,12 +28,12 @@ class AbsenController extends Controller
         $user = Auth::user();
 
         // Cek role dan relasi
-        if ($user->role === 'guru') {
+        if ($user->role === 'Guru') {
             $guru = $user->guru;
             if (!$guru) {
                 dd('Guru tidak ditemukan untuk user ID ' . $user->id);
             }
-        } elseif ($user->role === 'siswa') {
+        } elseif ($user->role === 'Siswa') {
             $siswa = $user->siswa;
             if (!$siswa) {
                 dd('Siswa tidak ditemukan untuk user ID ' . $user->id);

@@ -2,10 +2,6 @@
 
 @section('title', 'Profile')
 
-@push('style')
-    <link rel="stylesheet" href="{{ asset('library/selectric/public/selectric.css') }}">
-@endpush
-
 @section('main')
     <div class="main-content">
         <section class="section">
@@ -14,8 +10,9 @@
             </div>
             <div class="section-body">
                 @include('layouts.alert')
+
                 <div class="row">
-                    <div class="col-12 col-md-4">
+                    <div class="col-md-4">
                         <div class="card profile-widget">
                             <div class="profile-widget-header text-center">
                                 <img src="{{ Auth::user()->image ? asset('img/user/' . Auth::user()->image) : asset('img/avatar/avatar-1.png') }}"
@@ -34,7 +31,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-8">
+
+                    <div class="col-md-8">
                         <div class="card">
                             <div class="card-header">
                                 <h4>Informasi Akun</h4>
@@ -53,14 +51,15 @@
                                         <th>Role</th>
                                         <td>{{ Auth::user()->role }}</td>
                                     </tr>
-                                    @if (Auth::user()->role === 'Siswa')
+
+                                    @if (Auth::user()->role === 'Siswa' && Auth::user()->siswa)
                                         <tr>
                                             <th>NIS</th>
-                                            <td>{{ Auth::user()->siswa->nis ?? '-' }}</td>
+                                            <td>{{ Auth::user()->siswa->nis }}</td>
                                         </tr>
                                         <tr>
                                             <th>NISN</th>
-                                            <td>{{ Auth::user()->siswa->nisn ?? '-' }}</td>
+                                            <td>{{ Auth::user()->siswa->nisn }}</td>
                                         </tr>
                                         <tr>
                                             <th>Kelas</th>
@@ -68,24 +67,44 @@
                                         </tr>
                                         <tr>
                                             <th>Jenis Kelamin</th>
-                                            <td>{{ Auth::user()->siswa->jenis_kelamin ?? '-' }}</td>
+                                            <td>{{ Auth::user()->siswa->jenis_kelamin }}</td>
                                         </tr>
                                         <tr>
                                             <th>No HP</th>
-                                            <td>{{ Auth::user()->siswa->no_telepon ?? '-' }}</td>
+                                            <td>{{ Auth::user()->siswa->no_telepon }}</td>
                                         </tr>
-                                    @elseif(Auth::user()->role === 'Guru')
+                                        <tr>
+                                            <th>Nama Ortu</th>
+                                            <td>{{ Auth::user()->siswa->ortu->nama ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Alamat</th>
+                                            <td>{{ Auth::user()->siswa->ortu->alamat ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Pekerjaan</th>
+                                            <td>{{ Auth::user()->siswa->ortu->pekerjaan ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>No HP Ortu</th>
+                                            <td>{{ Auth::user()->siswa->ortu->no_telepon ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Hubungan</th>
+                                            <td>{{ Auth::user()->siswa->ortu->hubungan ?? '-' }}</td>
+                                        </tr>
+                                    @elseif (Auth::user()->role === 'Guru' && Auth::user()->guru)
                                         <tr>
                                             <th>NIP</th>
-                                            <td>{{ Auth::user()->guru->nip ?? '-' }}</td>
+                                            <td>{{ Auth::user()->guru->nip }}</td>
                                         </tr>
                                         <tr>
-                                            <th>Jenis kelamin</th>
-                                            <td>{{ Auth::user()->guru->jenis_kelamin ?? '-' }}</td>
+                                            <th>Jenis Kelamin</th>
+                                            <td>{{ Auth::user()->guru->jenis_kelamin }}</td>
                                         </tr>
                                         <tr>
                                             <th>No HP</th>
-                                            <td>{{ Auth::user()->guru->no_telepon ?? '-' }}</td>
+                                            <td>{{ Auth::user()->guru->no_telepon }}</td>
                                         </tr>
                                     @endif
                                 </table>

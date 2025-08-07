@@ -138,6 +138,61 @@
                                                     @endforeach
                                                 </select>
                                             </div>
+                                            {{-- Tambahan untuk orang tua --}}
+                                            <div class="form-group col-md-6">
+                                                <label>Nama Orang Tua</label>
+                                                <input type="text" name="nama"
+                                                    class="form-control @error('nama') is-invalid @enderror"
+                                                    value="{{ old('nama', Auth::user()->siswa?->ortu?->nama ?? '') }}">
+                                                @error('nama')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>Alamat</label>
+                                                <input type="text" name="alamat"
+                                                    class="form-control @error('alamat') is-invalid @enderror"
+                                                    value="{{ old('alamat', Auth::user()->siswa?->ortu?->alamat ?? '') }}">
+                                                @error('alamat')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>Pekerjaan</label>
+                                                <input type="text" name="pekerjaan"
+                                                    class="form-control @error('pekerjaan') is-invalid @enderror"
+                                                    value="{{ old('pekerjaan', Auth::user()->siswa?->ortu?->pekerjaan ?? '') }}">
+                                                @error('pekerjaan')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>No Telepon Ortu</label>
+                                                <input type="text" name="no_telepon_ortu"
+                                                    class="form-control @error('no_telepon_ortu') is-invalid @enderror"
+                                                    value="{{ old('no_telepon_ortu', Auth::user()->siswa?->ortu?->no_telepon ?? '') }}">
+                                                @error('no_telepon_ortu')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>Hubungan</label>
+                                                <select name="hubungan" class="form-control selectric">
+                                                    <option value="Ayah"
+                                                        {{ (Auth::user()->siswa->hubungan ?? '') === 'Ayah' ? 'selected' : '' }}>
+                                                        Ayah</option>
+                                                    <option value="Ibu"
+                                                        {{ (Auth::user()->siswa->jenis_kelamin ?? '') === 'Ibu' ? 'selected' : '' }}>
+                                                        Ibu</option>
+                                                    <option value="Wali"
+                                                        {{ (Auth::user()->siswa->jenis_kelamin ?? '') === 'Wali' ? 'selected' : '' }}>
+                                                        Wali</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     @elseif (Auth::user()->role === 'Guru')
                                         <!-- Form Guru -->
