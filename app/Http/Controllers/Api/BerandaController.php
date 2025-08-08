@@ -9,15 +9,27 @@ use App\Models\Mapel;
 use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;;
+use Illuminate\Support\Facades\Auth;
+;
+use Carbon\Carbon;
 
 class BerandaController extends Controller
 {
-     public function index(Request $request)
+    public function index(Request $request)
     {
         $user = Auth::user();
         $role = strtolower($user->role);
         $filterHari = $request->input('hari');
+
+        $hariMap = [
+            'Senin' => 0,
+            'Selasa' => 1,
+            'Rabu' => 2,
+            'Kamis' => 3,
+            'Jumat' => 4,
+            'Sabtu' => 5,
+            'Minggu' => 6,
+        ];
 
         // Statistik (khusus Admin)
         $statistik = null;
@@ -48,17 +60,31 @@ class BerandaController extends Controller
 
         // Urutkan hari & jam
         $jadwalQuery->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
-                    ->orderBy('jam_mulai');
+            ->orderBy('jam_mulai');
 
         // Paginate hasil jadwal
         $jadwal = $jadwalQuery->paginate(5);
+        $jadwal->through(function ($item) use ($hariMap) {
+            $indexHari = $hariMap[$item->hari] ?? 0;
+            $tanggalPertemuan = Carbon::now()->startOfWeek(Carbon::MONDAY)->addDays($indexHari)->format('d-m-Y');
 
+            // Menambahkan properti baru ke objek item
+            $item->tanggal_pertemuan = $tanggalPertemuan;
+
+            return $item;
+        });
         return response()->json([
             'success' => true,
             'message' => 'Data beranda berhasil diambil.',
             'role' => $user->role,
             'statistik' => $statistik,
             'jadwal' => $jadwal,
+            'user' => [
+                'name' => $user->name,
+                'image' => $user->image
+                    ? url('/img/user/' . $user->image)
+                    : null,
+            ],
         ]);
     }
 }
