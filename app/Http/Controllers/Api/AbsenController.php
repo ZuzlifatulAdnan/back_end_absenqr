@@ -21,16 +21,14 @@ class AbsenController extends Controller
 
         $query = Jadwal::with(['kelas', 'mapel', 'guru.user']);
 
-        if ($user->role === 'Guru') {
-            $query->where('guru_id', optional($user->guru)->id ?? 0);
-        } elseif ($user->role === 'Siswa') {
+        if ($user->role === 'Siswa') {
             $query->where('kelas_id', optional($user->siswa)->kelas_id ?? 0);
         }
 
         if ($request->filled('q')) {
             $query->where(function ($q) use ($request) {
                 $q->whereHas('guru.user', fn($q2) => $q2->where('name', 'like', "%{$request->q}%"))
-                  ->orWhereHas('mapel', fn($q3) => $q3->where('nama', 'like', "%{$request->q}%"));
+                    ->orWhereHas('mapel', fn($q3) => $q3->where('nama', 'like', "%{$request->q}%"));
             });
         }
 
@@ -53,13 +51,19 @@ class AbsenController extends Controller
 
         $allAbsen = Absen::with('jadwal.kelas')
             ->where('jadwal_id', $id)
-            ->when($request->filled('hari'), fn($q) =>
+            ->when(
+                $request->filled('hari'),
+                fn($q) =>
                 $q->whereHas('jadwal', fn($q2) => $q2->where('hari', $request->hari))
             )
-            ->when($request->filled('kelas_id'), fn($q) =>
+            ->when(
+                $request->filled('kelas_id'),
+                fn($q) =>
                 $q->whereHas('jadwal.kelas', fn($q2) => $q2->where('id', $request->kelas_id))
             )
-            ->when($request->filled('tanggal'), fn($q) =>
+            ->when(
+                $request->filled('tanggal'),
+                fn($q) =>
                 $q->whereDate('tanggal_absen', $request->tanggal)
             )
             ->get();
@@ -112,6 +116,26 @@ class AbsenController extends Controller
             'jumlah_pertemuan' => $jumlahPertemuan,
             'tanggal_absen' => $tanggalAbsen,
             'rekap' => $data,
+        ]);
+    }
+    public function scanForm()
+    {
+        $user = Auth::user();
+
+        // Ambil data siswa beserta kelasnya
+        $siswa = Siswa::with('kelas')->where('user_id', $user->id)->first();
+
+        if (!$siswa || !$siswa->kelas) {
+            return response()->json([
+                'message' => 'Data kelas tidak ditemukan untuk siswa ini.'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Data scan form berhasil diambil.',
+            'data' => [
+                'kelas' => $siswa->kelas
+            ]
         ]);
     }
 

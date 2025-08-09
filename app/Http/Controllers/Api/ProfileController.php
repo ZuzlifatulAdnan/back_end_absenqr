@@ -33,43 +33,34 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-        $role = $user->role;
 
+        // Validasi semua field
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'nis' => 'required|unique:siswas,nis,' . ($user->siswa->id ?? 'NULL'),
+            'nisn' => 'required|unique:siswas,nisn,' . ($user->siswa->id ?? 'NULL'),
+            'kelas_id' => 'required|exists:kelas,id',
+            'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+            'no_telepon' => 'required|regex:/^628/',
+            'nama' => 'required|string|max:255',
+            'alamat' => 'required|string',
+            'pekerjaan' => 'required|string|max:255',
+            'no_telepon_ortu' => 'required|regex:/^628/',
+            'hubungan' => 'required|string|max:50',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
-
-        if ($role === 'Siswa') {
-            $rules = array_merge($rules, [
-                'nis' => 'required|unique:siswas,nis,' . ($user->siswa->id ?? 'NULL'),
-                'nisn' => 'required|unique:siswas,nisn,' . ($user->siswa->id ?? 'NULL'),
-                'kelas_id' => 'required|exists:kelas,id',
-                'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
-                'no_telepon' => 'required|regex:/^628/',
-                'nama' => 'required',
-                'alamat' => 'required',
-                'pekerjaan' => 'required',
-                'no_telepon_ortu' => 'required|regex:/^628/',
-                'hubungan' => 'required',
-            ]);
-        } elseif ($role === 'Guru') {
-            $rules = array_merge($rules, [
-                'nip' => 'required|unique:gurus,nip,' . ($user->guru->id ?? 'NULL'),
-                'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
-                'no_telepon' => 'required|regex:/^628/',
-            ]);
-        }
 
         $validated = $request->validate($rules);
 
+        // Update data user
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
         ]);
 
-        if ($role === 'Siswa' && $user->siswa) {
+        // Update data siswa jika ada
+        if ($user->siswa) {
             $user->siswa->update([
                 'nis' => $validated['nis'],
                 'nisn' => $validated['nisn'],
@@ -78,7 +69,7 @@ class ProfileController extends Controller
                 'no_telepon' => $validated['no_telepon'],
             ]);
 
-            $ortu = $user->siswa->ortu;
+            // Update atau buat data orang tua
             $ortuData = [
                 'nama' => $validated['nama'],
                 'alamat' => $validated['alamat'],
@@ -87,30 +78,25 @@ class ProfileController extends Controller
                 'hubungan' => $validated['hubungan'],
             ];
 
-            if ($ortu) {
-                $ortu->update($ortuData);
+            if ($user->siswa->ortu) {
+                $user->siswa->ortu->update($ortuData);
             } else {
                 $user->siswa->ortu()->create($ortuData);
             }
         }
 
-        if ($role === 'Guru' && $user->guru) {
-            $user->guru->update([
-                'nip' => $validated['nip'],
-                'jenis_kelamin' => $validated['jenis_kelamin'],
-                'no_telepon' => $validated['no_telepon'],
-            ]);
-        }
-
+        // Update foto profil jika ada upload
         if ($request->hasFile('foto')) {
             $foto = $request->file('foto');
             $filename = time() . '.' . $foto->getClientOriginalExtension();
             $foto->move(public_path('img/user'), $filename);
 
+            // Hapus foto lama jika ada
             if ($user->image && file_exists(public_path('img/user/' . $user->image))) {
                 unlink(public_path('img/user/' . $user->image));
             }
 
+            // Simpan foto baru
             $user->update(['image' => $filename]);
         }
 
@@ -120,7 +106,6 @@ class ProfileController extends Controller
             'data' => $user->fresh()->load('siswa.kelas', 'siswa.ortu', 'guru')
         ]);
     }
-
     public function changePassword(Request $request)
     {
         $user = Auth::user();

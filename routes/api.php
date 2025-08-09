@@ -13,7 +13,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'index']);
     Route::get('/profile/edit', [ProfileController::class, 'edit']);
-    Route::put('/profile/update', [ProfileController::class, 'update']);
+    Route::post('/profile/update', [ProfileController::class, 'update']);
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
     // izin
     Route::get('/izin', [IzinController::class, 'index']);
@@ -23,8 +23,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/beranda', [BerandaController::class, 'index']);
     // absen
     Route::get('/absen', [AbsenController::class, 'index']);
+    Route::post('/absen/scan', [AbsenController::class, 'submitScan']);
+    Route::get('/absen/scan-form', [AbsenController::class, 'scanForm']);
     Route::get('/absen/{id}', [AbsenController::class, 'show']);
     Route::get('/absen/{id}/rekap', [AbsenController::class, 'rekap']);
-    Route::post('/absen/scan', [AbsenController::class, 'submitScan']);
+    
 });
 
